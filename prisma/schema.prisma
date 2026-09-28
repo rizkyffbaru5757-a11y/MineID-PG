@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  balance   Int      @default(0) // saldo lokal, dalam Rupiah (integer, no decimals)
+  createdAt DateTime @default(now())
+
+  deposits  Deposit[]
+  withdraws Withdraw[]
+}
+
+model Deposit {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  transactionId String    @unique // transaction_id dari AustinPay, mis. APG-xxxx
+  amount        Int // jumlah final yang harus dibayar (sudah + fee + unique_code)
+  status        String    @default("pending") // pending | paid | expired | cancelled
+  qrString      String?   @db.Text
+  qrImage       String?   @db.LongText
+  expiredAt     DateTime?
+  paidAt        DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Withdraw {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  austinpayId      String? // id dari response instant-withdraw/create
+  wallet           String
+  productCode      String
+  destination      String // nomor HP / nomor VA tujuan
+  nominal          Int // nominal yang diterima tujuan
+  fee              Int      @default(0)
+  totalDeducted    Int // total yang dipotong dari saldo user lokal
+  status           String   @default("processing") // processing | success | failed
+  providerResponse String?  @db.Text
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+}
