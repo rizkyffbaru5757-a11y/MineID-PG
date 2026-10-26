@@ -40,20 +40,22 @@ jobs:
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
           echo "Project directory: $PROJECT_DIR"
 
-      - name: Install Gradle
+            - name: Install Gradle
         run: |
           curl -fsSL \
-            https://services.gradle.org/distributions/gradle-8.9-bin.zip \
+            https://services.gradle.org/distributions/gradle-9.4.1-bin.zip \
             -o /tmp/gradle.zip
 
           sudo unzip -q /tmp/gradle.zip -d /opt
 
-          echo "/opt/gradle-8.9/bin" >> "$GITHUB_PATH"
+          echo "/opt/gradle-9.4.1/bin" >> "$GITHUB_PATH"
+
+      - name: Verify Gradle
+        run: gradle --version
 
       - name: Build debug APK
         run: |
           gradle --no-daemon -p "$PROJECT_DIR" assembleDebug
-
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
